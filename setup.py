@@ -12,25 +12,39 @@ if requirements_path.is_file():
     with open(requirements_path, "r", encoding="utf-8") as requirements_file:
         requirements = requirements_file.read().splitlines()
 
+module_name = "wyoming_ovos_tts"
+module_dir = this_dir / module_name
+data_files = []
+
+version = "0.1.0"
+
 # -----------------------------------------------------------------------------
 
-
 setup(
-    name="wyoming_ovos_tts",
-    version="1.0.0",
-    description="Wyoming Server openTTS",
-    url="http://github.com/rhasspy/wyoming-ovos-tts",
-    author="Michael Hansen",
-    author_email="mike@rhasspy.org",
+    name=module_name,
+    version=version,
+    description="Wyoming Server for OpenVoiceOS TTS plugins",
+    url="http://github.com/TigreGotico/wyoming-ovos-tts",
+    author="JarbasAI",
+    author_email="jarbasai@mailfence.com",
     license="MIT",
     packages=setuptools.find_packages(),
+    package_data={module_name: [str(p.relative_to(module_dir)) for p in data_files]},
     install_requires=requirements,
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "Topic :: Text Processing :: Linguistic",
         "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
     ],
-    keywords="rhasspy wyoming tts opentts",
+    keywords="wyoming OVOS tts",
+    entry_points={
+        "console_scripts": ["wyoming-ovos-tts = wyoming_ovos_tts.__main__:run"]
+    },
 )
