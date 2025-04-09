@@ -3,6 +3,8 @@
 
 expose OVOS TTS plugins via wyoming for usage with the voice pee
 
+![image](https://github.com/user-attachments/assets/67808db8-1c45-4ba7-bae6-4659dfdeac4e)
+
 ## Usage
 
 ```bash
