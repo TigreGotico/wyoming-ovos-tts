@@ -1,0 +1,2 @@
+wyoming==1.5.4
+transliterate==1.10.2
