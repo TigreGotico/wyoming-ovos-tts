@@ -6,8 +6,6 @@ expose OVOS TTS plugins via wyoming for usage with the voice pee
 ![image](https://github.com/user-attachments/assets/67808db8-1c45-4ba7-bae6-4659dfdeac4e)
 
 
-> ⚠️ **Private Repository:** This project is not yet publicly available. Please do not share this repository outside the early access group.
-
 
 ## Usage
 
