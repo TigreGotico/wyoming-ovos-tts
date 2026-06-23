@@ -1,2 +1,1 @@
-include requirements.txt
 include wyoming_ovos_tts/version.py

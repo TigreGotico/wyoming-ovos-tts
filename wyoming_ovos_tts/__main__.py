@@ -14,7 +14,7 @@ from typing import Optional
 from ovos_config import Configuration
 from ovos_plugin_manager.templates.tts import TTS
 from ovos_plugin_manager.tts import OVOSTTSFactory
-from wyoming.audio import wav_to_chunks, AudioStart, AudioChunk, AudioStop
+from wyoming.audio import wav_to_chunks
 from wyoming.error import Error
 from wyoming.event import Event
 from wyoming.info import Attribution, Describe, Info, TtsProgram, TtsVoice
@@ -39,7 +39,9 @@ _SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
 def _extract_sentences(buffer: str) -> tuple[list[str], str]:
     """Split accumulated text into complete sentences + remainder.
 
-    Returns (complete_sentences, remaining_partial_text).
+    A sentence boundary is any of ``.!?`` followed by whitespace, so
+    abbreviations and decimals (``Dr.``, ``3.14``) are split as if they
+    ended a sentence. Returns (complete_sentences, remaining_partial_text).
     """
     parts = _SENTENCE_END.split(buffer.strip())
     if not parts or (len(parts) == 1 and parts[0] == ""):
@@ -154,11 +156,13 @@ class OVOSTTSEventHandler(AsyncEventHandler):
 
         _LOGGER.debug("Client connected: %s", self.client_id)
 
-    async def _synthesize_and_send(self, text: str) -> None:
+    async def _synthesize_and_send(self, text: str) -> bool:
         """Synthesize text and stream audio chunks back to client.
 
-        Runs the blocking ``tts.synth()`` in a thread to avoid
-        stalling the event loop.
+        Runs the blocking ``tts.synth()`` in a thread to avoid stalling
+        the event loop. On failure an ``Error`` event is sent and
+        ``False`` is returned; the connection is left open so the rest
+        of a streaming request can continue.
         """
         try:
             audio_path, _ = await asyncio.to_thread(self.tts.synth, text)
@@ -174,12 +178,13 @@ class OVOSTTSEventHandler(AsyncEventHandler):
                         stop_event=True,
                 ):
                     await self.write_event(wav_event.event())
+            return True
         except Exception as err:
             _LOGGER.exception("Synthesis failed for text: %r", text[:80])
             await self.write_event(
                 Error(text=str(err), code=err.__class__.__name__).event()
             )
-            raise
+            return False
 
     async def handle_event(self, event: Event) -> bool:
         try:
@@ -212,10 +217,6 @@ class OVOSTTSEventHandler(AsyncEventHandler):
                 for sentence in sentences:
                     await self._synthesize_and_send(sentence)
                 return True
-
-            if Synthesize.is_type(event.type) and self.is_streaming:
-                # Backward-compat end-of-stream signal
-                pass
 
             if SynthesizeStop.is_type(event.type):
                 remaining = self._buffer.strip()

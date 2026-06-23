@@ -44,6 +44,9 @@ test = [
 [tool.setuptools]
 include-package-data = true
 
+[tool.setuptools.dynamic]
+version = { attr = "wyoming_ovos_tts.version.__version__" }
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["wyoming_ovos_tts*"]

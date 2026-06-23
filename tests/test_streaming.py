@@ -142,12 +142,21 @@ async def test_non_streaming_path():
 
 @pytest.mark.asyncio
 async def test_error_event_on_failure():
-    """Handler sends Error event when synth fails."""
+    """A synth failure sends exactly one Error event and returns False."""
     failing_plugin = MagicMock()
     failing_plugin.synth.side_effect = RuntimeError("synth failed")
     failing_plugin.available_languages = ["en-US"]
 
     handler = _build_handler(failing_plugin)
 
-    with pytest.raises(RuntimeError):
-        await handler._synthesize_and_send("test")
+    captured = []
+
+    async def capture(event):
+        captured.append(event)
+
+    handler.write_event = capture
+
+    result = await handler._synthesize_and_send("test")
+    assert result is False
+    errors = [e for e in captured if e.type == "error"]
+    assert len(errors) == 1
