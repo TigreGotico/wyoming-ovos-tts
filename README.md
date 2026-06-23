@@ -157,6 +157,14 @@ Any OVOS STT plugin implementing `TTS` from `ovos_plugin_manager.templates.tts`:
 - `ovos-tts-plugin-ibm` — IBM Watson TTS
 - `ovos-tts-plugin-amazon` — Amazon Polly TTS
 
+## Documentation
+
+Detailed docs live in [`docs/`](docs/index.md):
+
+- [Configuration](docs/configuration.md)
+- [Home Assistant](docs/home_assistant.md)
+- [Wyoming protocol](docs/protocol.md)
+
 ## Credits
 
 Developed by [TigreGótico](https://tigregotico.pt) for [OpenVoiceOS](https://openvoiceos.org).
