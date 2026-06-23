@@ -8,7 +8,7 @@ from wyoming.event import Event
 from wyoming.info import Attribution, Info, TtsProgram
 from wyoming.tts import Synthesize, SynthesizeStart, SynthesizeChunk, SynthesizeStop
 
-from wyoming_ovos_tts.__main__ import OVOSTTSEventHandler, _extract_sentences
+from wyoming_ovos_tts.__main__ import OVOSTTSEventHandler
 
 
 def _streams():
@@ -65,13 +65,22 @@ async def test_synthesize_while_streaming():
 
 @pytest.mark.asyncio
 async def test_multiple_sentence_chunks():
-    """A single chunk with multiple sentences synthesizes each one."""
+    """A chunk with multiple complete sentences synthesizes each one."""
     handler = _handler()
+    sent = []
+
+    async def fake_send(text):
+        sent.append(text)
+        return True
+
+    handler._synthesize_and_send = fake_send
+
     await handler.handle_event(SynthesizeStart().event())
+    # Trailing capitalized sentence makes both prior boundaries flush.
     await handler.handle_event(
-        SynthesizeChunk(text="First. Second! Third?").event()
+        SynthesizeChunk(text="First. Second! Third? Go.").event()
     )
-    assert handler._buffer == ""
+    assert sent == ["First.", "Second!", "Third?"]
 
 
 @pytest.mark.asyncio

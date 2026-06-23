@@ -26,7 +26,7 @@ Expose any [OpenVoiceOS](https://openvoiceos.org) TTS plugin as a [Wyoming proto
 ## Features
 
 - **Non-streaming TTS** — Single `Synthesize` event returns complete audio
-- **Streaming TTS** (Wyoming v1.7+) — `SynthesizeStart`/`SynthesizeChunk`/`SynthesizeStop` with sentence-boundary-aware audio streaming for lower latency
+- **Streaming TTS** (Wyoming v1.7+) — `SynthesizeStart`/`SynthesizeChunk`/`SynthesizeStop` with sentence-boundary-aware audio streaming (via [`sentence-stream`](https://github.com/rhasspy/sentence-stream), the same segmenter used by `wyoming-piper`) for lower latency
 - **Multi-language** — Advertises the plugin's `available_languages` in the Wyoming `Info` response
 - **Thread-safe** — Blocking `tts.synth()` is offloaded via `asyncio.to_thread()` so the event loop stays responsive
 - **Error reporting** — Failures are sent back as Wyoming `Error` events
@@ -140,7 +140,7 @@ Server → AudioStart → AudioChunk+ → AudioStop   (sentence "I'm fine.")
 Server → SynthesizeStopped
 ```
 
-When `--no-streaming` is not set, the server processes only complete sentences (split on `.`, `!`, `?`) and sends audio incrementally. This provides lower time-to-first-audio compared to the non-streaming path.
+When `--no-streaming` is not set, incoming text is segmented into complete sentences by [`sentence-stream`](https://github.com/rhasspy/sentence-stream) — which correctly handles abbreviations (`Dr.`), decimals (`3.14`), ellipses and non-Latin scripts — and each sentence is synthesized and streamed as its own `AudioStart`→`AudioChunk`→`AudioStop` group as soon as it is complete. This lowers time-to-first-audio compared to the non-streaming path. A trailing partial sentence is flushed when `SynthesizeStop` arrives, followed by a single `SynthesizeStopped`.
 
 ## Supported Plugin Types
 

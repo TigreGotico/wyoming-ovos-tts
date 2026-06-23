@@ -3,7 +3,6 @@ import argparse
 import asyncio
 import io
 import logging
-import re
 import signal
 import time
 import wave
@@ -14,6 +13,7 @@ from typing import Optional
 from ovos_config import Configuration
 from ovos_plugin_manager.templates.tts import TTS
 from ovos_plugin_manager.tts import OVOSTTSFactory
+from sentence_stream import SentenceBoundaryDetector
 from wyoming.audio import wav_to_chunks
 from wyoming.error import Error
 from wyoming.event import Event
@@ -33,25 +33,6 @@ _LOGGER = logging.getLogger()
 _DIR = Path(__file__).parent
 
 _SAMPLES_PER_CHUNK = 1024
-_SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
-
-
-def _extract_sentences(buffer: str) -> tuple[list[str], str]:
-    """Split accumulated text into complete sentences + remainder.
-
-    A sentence boundary is any of ``.!?`` followed by whitespace, so
-    abbreviations and decimals (``Dr.``, ``3.14``) are split as if they
-    ended a sentence. Returns (complete_sentences, remaining_partial_text).
-    """
-    parts = _SENTENCE_END.split(buffer.strip())
-    if not parts or (len(parts) == 1 and parts[0] == ""):
-        return ([], "")
-    last = parts[-1]
-    if last and last[-1] in ".!?":
-        return (parts, "")
-    if len(parts) > 1:
-        return (parts[:-1], parts[-1])
-    return ([], parts[0])
 
 
 async def main() -> None:
@@ -151,7 +132,7 @@ class OVOSTTSEventHandler(AsyncEventHandler):
         self.client_id = str(time.monotonic_ns())
         self.tts = plugin
         self.is_streaming: Optional[bool] = None
-        self._buffer = ""
+        self._sbd = SentenceBoundaryDetector()
         self._samples_per_chunk = cli_args.samples_per_chunk
 
         _LOGGER.debug("Client connected: %s", self.client_id)
@@ -206,23 +187,20 @@ class OVOSTTSEventHandler(AsyncEventHandler):
 
             if SynthesizeStart.is_type(event.type):
                 self.is_streaming = True
-                self._buffer = ""
+                self._sbd = SentenceBoundaryDetector()
                 _LOGGER.debug("Streaming started")
                 return True
 
             if SynthesizeChunk.is_type(event.type):
                 chunk = SynthesizeChunk.from_event(event)
-                self._buffer += chunk.text
-                sentences, self._buffer = _extract_sentences(self._buffer)
-                for sentence in sentences:
+                for sentence in self._sbd.add_chunk(chunk.text):
                     await self._synthesize_and_send(sentence)
                 return True
 
             if SynthesizeStop.is_type(event.type):
-                remaining = self._buffer.strip()
+                remaining = self._sbd.finish().strip()
                 if remaining:
                     await self._synthesize_and_send(remaining)
-                self._buffer = ""
                 self.is_streaming = None
                 await self.write_event(SynthesizeStopped().event())
                 _LOGGER.debug("Streaming finished")
