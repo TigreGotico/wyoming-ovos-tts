@@ -1,0 +1,1 @@
+from wyoming_ovos_tts.version import __version__

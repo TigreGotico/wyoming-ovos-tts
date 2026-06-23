@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wyoming-ovos-tts"
+dynamic = ["version"]
+description = "Wyoming Server for OpenVoiceOS TTS plugins"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "JarbasAI", email = "jarbasai@mailfence.com" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "wyoming>=1.9",
+    "ovos-plugin-manager",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Text Processing :: Linguistic",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+keywords = ["wyoming", "OVOS", "tts"]
+
+[project.urls]
+Homepage = "https://github.com/OpenVoiceOS/wyoming-ovos-tts"
+
+[project.scripts]
+wyoming-ovos-tts = "wyoming_ovos_tts.__main__:run"
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["wyoming_ovos_tts*"]
