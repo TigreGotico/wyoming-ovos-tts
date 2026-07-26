@@ -149,6 +149,11 @@ class OVOSTTSEventHandler(AsyncEventHandler):
 
 # -----------------------------------------------------------------------------
 
+def run() -> None:
+    """Console-script entry point (see setup.py console_scripts)."""
+    asyncio.run(main())
+
+
 if __name__ == "__main__":
     try:
         asyncio.run(main())
