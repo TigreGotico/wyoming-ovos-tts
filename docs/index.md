@@ -1,6 +1,6 @@
 # wyoming-ovos-tts documentation
 
-Expose any [OpenVoiceOS](https://openvoiceos.org) TTS plugin as a
+This bridge exposes any [OpenVoiceOS](https://openvoiceos.org) TTS plugin as a
 [Wyoming protocol](https://github.com/OHF-voice/wyoming) server, for use with
 Home Assistant, Rhasspy, and other Wyoming-compatible voice pipelines.
 
@@ -11,11 +11,11 @@ the incremental `SynthesizeStart`/`Chunk`/`Stop` streaming flow.
 
 ## Pages
 
-- **[Configuration](configuration.md)** — selecting a plugin, its `mycroft.conf`
+- **[Configuration](configuration.md)**: selecting a plugin, its `mycroft.conf`
   settings, and the streaming CLI flags.
-- **[Home Assistant](home_assistant.md)** — adding the bridge as a Wyoming TTS
+- **[Home Assistant](home_assistant.md)**: adding the bridge as a Wyoming TTS
   service.
-- **[Wyoming protocol](protocol.md)** — the non-streaming and streaming flows,
+- **[Wyoming protocol](protocol.md)**: the non-streaming and streaming flows,
   and how sentences are segmented for low-latency streaming.
 
 ## Quickstart
@@ -27,7 +27,7 @@ wyoming-ovos-tts --uri tcp://0.0.0.0:7892 \
                  --plugin-name ovos-tts-plugin-server
 ```
 
-Point Home Assistant's Wyoming integration at `host:7892` — see
+Point Home Assistant's Wyoming integration at `host:7892`. See
 [Home Assistant](home_assistant.md).
 
 ## Docker
@@ -38,5 +38,5 @@ docker run --rm -p 7892:7892 wyoming-ovos-tts \
     --uri tcp://0.0.0.0:7892 --plugin-name ovos-tts-plugin-server
 ```
 
-The image installs the package (and its dependencies) from `pyproject.toml`; add
-any extra TTS plugin you intend to load to the image or mount its config.
+The image installs the package (and its dependencies) from `pyproject.toml`. Add
+any extra TTS plugin you intend to load to the image, or mount its config.

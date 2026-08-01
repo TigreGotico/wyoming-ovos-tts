@@ -29,21 +29,24 @@ Server → AudioStart → AudioChunk+ → AudioStop   (per complete sentence)
 ```
 
 Each **complete sentence** is synthesized and streamed as its own
-`AudioStart` → `AudioChunk`* → `AudioStop` group as soon as it is available; a
+`AudioStart` → `AudioChunk`* → `AudioStop` group as soon as it is available. A
 single `SynthesizeStopped` terminates the stream. Any trailing partial sentence
 still buffered when `SynthesizeStop` arrives is flushed first.
 
 ## Sentence segmentation
 
-Sentence boundaries are detected by the
-[`sentence-stream`](https://github.com/rhasspy/sentence-stream) package — the same
-segmenter used by upstream `wyoming-piper`. It correctly keeps abbreviations
-(`Dr.`), decimals (`3.14`), ellipses, quotes and non-Latin scripts intact instead
-of splitting on every `.`/`!`/`?`. A boundary is only emitted once the start of
-the next sentence is seen, so the bridge never speaks a fragment early.
+The [`sentence-stream`](https://github.com/rhasspy/sentence-stream) package
+detects sentence boundaries. It is the same segmenter used by upstream
+`wyoming-piper`. It correctly keeps abbreviations (`Dr.`), decimals (`3.14`),
+ellipses, quotes, and non-Latin scripts intact, instead of splitting on every
+`.`/`!`/`?`. A boundary is only emitted once the start of the next sentence is
+seen, so the bridge never speaks a fragment early.
 
 ## Threading and errors
 
 `TTS.synth()` is blocking, so it runs via `asyncio.to_thread()`. A failure while
-synthesizing one sentence is reported as a Wyoming `Error(text, code)` event and
-the rest of the stream continues; the connection is not torn down.
+synthesizing one sentence comes back as a Wyoming `Error(text, code)` event, and
+the rest of the stream continues. The connection is not torn down.
+
+---
+[← Home Assistant](home_assistant.md) · [Home](index.md)
