@@ -1,26 +1,26 @@
 # Configuration
 
-The bridge itself is configured with CLI flags; the **TTS plugin** is configured
+CLI flags configure the bridge itself. The **TTS plugin** is configured
 through `mycroft.conf` (the standard OVOS config stack), read at startup.
 
 ## CLI
 
 | Argument | Required | Default | Meaning |
 | --- | --- | --- | --- |
-| `--plugin-name` | Yes | — | OVOS TTS plugin module name (e.g. `ovos-tts-plugin-server`) |
+| `--plugin-name` | Yes | none | OVOS TTS plugin module name (e.g. `ovos-tts-plugin-server`) |
 | `--uri` | No | `stdio://` | `tcp://HOST:PORT`, `unix:///path`, or `stdio://` |
 | `--samples-per-chunk` | No | `1024` | audio samples per Wyoming `AudioChunk` |
 | `--no-streaming` | No | `False` | disable the streaming protocol (only `Synthesize`) |
 | `--debug` | No | `False` | DEBUG-level logging |
 | `--log-format` | No | `%(levelname)s:%(name)s:%(message)s` | Python log format |
-| `--version` | No | — | print version and exit |
+| `--version` | No | none | print version and exit |
 
-`--no-streaming` also advertises `supports_synthesize_streaming=False` in `Info`,
-so clients fall back to the one-shot `Synthesize` flow.
+`--no-streaming` also advertises `supports_synthesize_streaming=False` in `Info`.
+Clients then fall back to the one-shot `Synthesize` flow.
 
 ## Plugin configuration
 
-Plugin settings are read from `mycroft.conf` under `tts.<plugin-name>`. The
+The bridge reads plugin settings from `mycroft.conf`, under `tts.<plugin-name>`. The
 section key must match the value passed to `--plugin-name`:
 
 ```json
@@ -37,12 +37,15 @@ section key must match the value passed to `--plugin-name`:
 }
 ```
 
-The language advertised in `Info` is taken from `tts.<plugin-name>.lang` if set,
+The language advertised in `Info` comes from `tts.<plugin-name>.lang` if set,
 otherwise from the top-level `lang`.
 
 ## Supported plugins
 
-Any plugin implementing `TTS` from `ovos_plugin_manager.templates.tts`, e.g.
-`ovos-tts-plugin-server`, `ovos-tts-plugin-piper`, `ovos-tts-plugin-mimic3`,
-`ovos-tts-plugin-azure`. Install the plugin alongside the bridge — it is not
-pulled in automatically.
+The bridge supports any plugin implementing `TTS` from
+`ovos_plugin_manager.templates.tts`, for example `ovos-tts-plugin-server`,
+`ovos-tts-plugin-piper`, and `ovos-tts-plugin-mimic3`. Install the plugin
+alongside the bridge. It is not pulled in automatically.
+
+---
+[Home](index.md) · [Home Assistant →](home_assistant.md)

@@ -5,7 +5,7 @@
 [![Wyoming](https://img.shields.io/badge/wyoming-1.9+-blueviolet.svg)](https://github.com/OHF-voice/wyoming)
 [![OVOS](https://img.shields.io/badge/OVOS-plugin--manager-ff69b4.svg)](https://github.com/OpenVoiceOS/ovos-plugin-manager)
 
-Expose any [OpenVoiceOS](https://openvoiceos.org) TTS plugin as a [Wyoming protocol](https://github.com/OHF-voice/wyoming) server for use with Home Assistant, Rhasspy, and other Wyoming-compatible voice pipelines.
+This bridge exposes any [OpenVoiceOS](https://openvoiceos.org) TTS plugin as a [Wyoming protocol](https://github.com/OHF-voice/wyoming) server. Use it with Home Assistant, Rhasspy, and other Wyoming-compatible voice pipelines.
 
 ```
                          ┌──────────────────────────────────────┐
@@ -25,12 +25,12 @@ Expose any [OpenVoiceOS](https://openvoiceos.org) TTS plugin as a [Wyoming proto
 
 ## Features
 
-- **Non-streaming TTS** — Single `Synthesize` event returns complete audio
-- **Streaming TTS** (Wyoming v1.7+) — `SynthesizeStart`/`SynthesizeChunk`/`SynthesizeStop` with sentence-boundary-aware audio streaming (via [`sentence-stream`](https://github.com/rhasspy/sentence-stream), the same segmenter used by `wyoming-piper`) for lower latency
-- **Multi-language** — Advertises the plugin's `available_languages` in the Wyoming `Info` response
-- **Thread-safe** — Blocking `tts.synth()` is offloaded via `asyncio.to_thread()` so the event loop stays responsive
-- **Error reporting** — Failures are sent back as Wyoming `Error` events
-- **Signal handling** — Graceful shutdown on SIGINT/SIGTERM
+- **Non-streaming TTS**: a single `Synthesize` event returns the complete audio.
+- **Streaming TTS** (Wyoming v1.7+): `SynthesizeStart`/`SynthesizeChunk`/`SynthesizeStop` streams audio at each sentence boundary, using [`sentence-stream`](https://github.com/rhasspy/sentence-stream) (the same segmenter used by `wyoming-piper`), for lower latency.
+- **Multi-language**: the bridge advertises the plugin's `available_languages` in the Wyoming `Info` response.
+- **Thread-safe**: the blocking `tts.synth()` call runs via `asyncio.to_thread()`, so the event loop stays responsive.
+- **Error reporting**: failures come back as Wyoming `Error` events.
+- **Signal handling**: the bridge shuts down cleanly on SIGINT/SIGTERM.
 
 ## Installation
 
@@ -40,7 +40,7 @@ Expose any [OpenVoiceOS](https://openvoiceos.org) TTS plugin as a [Wyoming proto
 pip install wyoming-ovos-tts
 ```
 
-You also need to install the OVOS TTS plugin you intend to bridge, e.g.:
+You also need the OVOS TTS plugin you want to bridge, for example:
 
 ```bash
 pip install ovos-tts-plugin-server
@@ -57,7 +57,7 @@ pip install -e .
 
 ## Configuration
 
-Plugin configuration is read from `mycroft.conf` under `tts.<plugin-name>`:
+The bridge reads plugin configuration from `mycroft.conf`, under `tts.<plugin-name>`:
 
 ```json
 {
@@ -76,7 +76,7 @@ Plugin configuration is read from `mycroft.conf` under `tts.<plugin-name>`:
 }
 ```
 
-The language is taken from `tts.<plugin-name>.lang` if set, otherwise from `lang` at the root level. Each plugin's config section must match the value passed to `--plugin-name`.
+The language comes from `tts.<plugin-name>.lang` if set, otherwise from `lang` at the root level. Each plugin's config section must match the value passed to `--plugin-name`.
 
 ## Usage
 
@@ -103,13 +103,13 @@ wyoming-ovos-tts --plugin-name ovos-tts-plugin-server
 
 | Argument | Required | Default | Description |
 |---|---|---|---|
-| `--plugin-name` | Yes | — | OVOS TTS plugin module name (e.g. `ovos-tts-plugin-server`) |
+| `--plugin-name` | Yes | none | OVOS TTS plugin module name (e.g. `ovos-tts-plugin-server`) |
 | `--uri` | No | `stdio://` | `tcp://HOST:PORT`, `unix:///path`, or `stdio://` |
 | `--samples-per-chunk` | No | `1024` | Audio samples per Wyoming `AudioChunk` event |
 | `--no-streaming` | No | `False` | Disable streaming TTS protocol (only `Synthesize`) |
 | `--debug` | No | `False` | Enable DEBUG-level logging |
 | `--log-format` | No | `%(levelname)s:%(name)s:%(message)s` | Python log format string |
-| `--version` | No | — | Print version and exit |
+| `--version` | No | none | Print version and exit |
 
 ## Wyoming Protocol
 
@@ -140,22 +140,24 @@ Server → AudioStart → AudioChunk+ → AudioStop   (sentence "I'm fine.")
 Server → SynthesizeStopped
 ```
 
-When `--no-streaming` is not set, incoming text is segmented into complete sentences by [`sentence-stream`](https://github.com/rhasspy/sentence-stream) — which correctly handles abbreviations (`Dr.`), decimals (`3.14`), ellipses and non-Latin scripts — and each sentence is synthesized and streamed as its own `AudioStart`→`AudioChunk`→`AudioStop` group as soon as it is complete. This lowers time-to-first-audio compared to the non-streaming path. A trailing partial sentence is flushed when `SynthesizeStop` arrives, followed by a single `SynthesizeStopped`.
+When `--no-streaming` is not set, [`sentence-stream`](https://github.com/rhasspy/sentence-stream) segments incoming text into complete sentences. It handles abbreviations (`Dr.`), decimals (`3.14`), ellipses, and non-Latin scripts correctly. Each sentence is synthesized and streamed as its own `AudioStart`→`AudioChunk`→`AudioStop` group as soon as it is complete. This lowers time-to-first-audio compared to the non-streaming path.
+
+A trailing partial sentence is flushed when `SynthesizeStop` arrives, followed by a single `SynthesizeStopped`.
 
 ## Supported Plugin Types
 
-Any OVOS STT plugin implementing `TTS` from `ovos_plugin_manager.templates.tts`:
+The bridge supports any OVOS TTS plugin that implements `TTS` from `ovos_plugin_manager.templates.tts`:
 
-- `ovos-tts-plugin-server` — proxy to remote TTS servers
-- `ovos-tts-plugin-piper` — local Piper TTS
-- `ovos-tts-plugin-espeak` — eSpeak NG synthesizer
-- `ovos-tts-plugin-mimic` — Mycroft Mimic
-- `ovos-tts-plugin-google-tx` — Google Translate TTS
-- `ovos-tts-plugin-nos` — NOS TTS
-- `ovos-tts-plugin-sam` — Software Automatic Mouth
-- `ovos-tts-plugin-azure` — Microsoft Azure Cognitive Services
-- `ovos-tts-plugin-ibm` — IBM Watson TTS
-- `ovos-tts-plugin-amazon` — Amazon Polly TTS
+- `ovos-tts-plugin-server`: proxy to remote TTS servers
+- `ovos-tts-plugin-piper`: local Piper TTS
+- `ovos-tts-plugin-espeak`: eSpeak NG synthesizer
+- `ovos-tts-plugin-mimic`: Mycroft Mimic
+- `ovos-tts-plugin-google-tx`: Google Translate TTS
+- `ovos-tts-plugin-nos`: NOS TTS
+- `ovos-tts-plugin-sam`: Software Automatic Mouth
+- `ovos-tts-plugin-azure`: Microsoft Azure Cognitive Services
+- `ovos-tts-plugin-ibm`: IBM Watson TTS
+- `ovos-tts-plugin-amazon`: Amazon Polly TTS
 
 ## Documentation
 
@@ -167,7 +169,7 @@ Detailed docs live in [`docs/`](docs/index.md):
 
 ## Credits
 
-Developed by [TigreGótico](https://tigregotico.pt) for [OpenVoiceOS](https://openvoiceos.org).
+[TigreGótico](https://tigregotico.pt) develops this project for [OpenVoiceOS](https://openvoiceos.org).
 
 [![NGI0 Commons Fund](./ngi.png)](https://nlnet.nl/project/OpenVoiceOS)
 
