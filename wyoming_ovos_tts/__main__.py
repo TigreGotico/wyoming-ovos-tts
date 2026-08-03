@@ -85,6 +85,7 @@ async def main() -> None:
                             url="https://github.com/OpenVoiceOS/ovos-plugin-manager",
                         ),
                         installed=True,
+                        version=__version__,
                         languages=languages,
                     )
                 ],
